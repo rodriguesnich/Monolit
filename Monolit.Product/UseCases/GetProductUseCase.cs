@@ -1,4 +1,5 @@
-using Monolit.Product.Domain.Dtos.GetProduct;
+using AutoMapper;
+using Monolit.Product.Domain.Dtos;
 using Monolit.Product.Repository;
 
 namespace Monolit.Product.UseCases;
@@ -6,20 +7,16 @@ namespace Monolit.Product.UseCases;
 public class GetProductUseCase
 {
     private readonly IProductRepository _productRepository;
-
-    public GetProductUseCase(IProductRepository productRepository)
+    private readonly IMapper _mapper;
+    public GetProductUseCase(IProductRepository productRepository, IMapper mapper)
     {
         _productRepository = productRepository;
+        _mapper = mapper;
     }
 
-    public async Task<ProductUseCaseDto> Execute(Guid productId)
+    public async Task<OutputProductUseCase> Execute(Guid productId)
     {
         var queryResult = await _productRepository.GetProduct(productId);
-
-        return new ProductUseCaseDto(){
-            Id = queryResult.Id,
-            Name = queryResult.Name,
-            Price = queryResult.Price
-        };
+        return _mapper.Map<OutputProductUseCase>(queryResult);
     }
 }

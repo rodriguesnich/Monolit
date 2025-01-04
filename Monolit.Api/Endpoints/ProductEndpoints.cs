@@ -1,5 +1,6 @@
 using Monolit.GeneralDomain.Gateways.ProductGateway;
 using Monolit.GeneralDomain.Gateways.ProductGateway.Dtos;
+using System.ComponentModel.DataAnnotations;
 
 namespace Monolit.Api.Endpoints;
 
@@ -11,8 +12,15 @@ public static class ProductEndpoints
 
         productGroup.MapPost("/", async (InputCreateProduct product, IProductGateway productGateway) =>
         {
-            var newProduct = await productGateway.CreateProduct(product);
-            return product != null ? Results.Ok(product) : Results.NotFound();
+            try
+            {
+                var newProduct = await productGateway.CreateProduct(product);
+                return newProduct != null ? Results.Ok(newProduct) : Results.NotFound();
+            }
+            catch (ValidationException ex)
+            {
+                return Results.BadRequest(new { Errors = ex.Message.Split("; ") });
+            }
         });
 
         productGroup.MapGet("/", async (IProductGateway productGateway) => 
@@ -27,10 +35,17 @@ public static class ProductEndpoints
             return product != null ? Results.Ok(product) : Results.NotFound();
         });
 
-        productGroup.MapPut("/{id}", async (Guid id, InputUpdateProduct product, IProductGateway productGateway) =>
+        productGroup.MapPut("/{id}", async (Guid id, InputCreateProduct product, IProductGateway productGateway) =>
         {
-            var updated = await productGateway.UpdateProduct(product);
-            return updated != null ? Results.Ok(updated) : Results.NotFound();
+            try
+            {
+                var updated = await productGateway.UpdateProduct(id, product);
+                return updated != null ? Results.Ok(updated) : Results.NotFound();
+            }
+            catch (ValidationException ex)
+            {
+                return Results.BadRequest(new { Errors = ex.Message.Split("; ") });
+            }
         });
 
         productGroup.MapDelete("/{id}", async (Guid id, IProductGateway productGateway) =>

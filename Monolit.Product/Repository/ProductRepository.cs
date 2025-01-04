@@ -20,6 +20,7 @@ public class ProductRepository : IProductRepository
             Name = productEntity.Name,
             Description = productEntity.Description,
             Price = productEntity.Price,
+            IsActive = true,
         };
 
         _context.Products.Add(productModel);
@@ -30,7 +31,7 @@ public class ProductRepository : IProductRepository
     
     public async Task<List<ProductModel>> ListProducts()
     {
-        return await _context.Products.ToListAsync();
+        return await _context.Products.Where(p => p.IsActive).ToListAsync();
     }
 
     public async Task<ProductModel> GetProduct(Guid productId)
@@ -39,30 +40,13 @@ public class ProductRepository : IProductRepository
         return product ?? throw new KeyNotFoundException($"Product with ID {productId} not found");
     }
 
-    public async Task<ProductModel> UpdateProduct(UpdateProductEntity productEntity)
-    {
-        var product = await _context.Products.FirstOrDefaultAsync(p => p.Id == productEntity.Id);
-        if (product == null)
-        {
-            throw new KeyNotFoundException($"Product with ID {productEntity.Id} not found");
-        }
-
-        product.Name = productEntity.Name;
-        product.Description = productEntity.Description;
-        product.Price = productEntity.Price;
-
-        _context.Products.Update(product);
-        await _context.SaveChangesAsync();
-
-        return product;
-    }
-
-    public async Task DeleteProduct(Guid productId)
+   public async Task DeleteProduct(Guid productId)
     {
         var product = await _context.Products.FindAsync(productId);
         if (product != null)
         {
-            _context.Products.Remove(product);
+            product.IsActive = false;
+            _context.Products.Update(product);
             await _context.SaveChangesAsync();
         }
     }

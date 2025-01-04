@@ -13,4 +13,7 @@ public class ProductModel : BaseEntity
     public double Price { get; set; }
 
     public string Description { get; set; } = string.Empty;
+    
+    [Required]
+    public bool IsActive {get; set;}
 }

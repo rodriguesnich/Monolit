@@ -1,6 +1,5 @@
 using Monolit.GeneralDomain.Gateways.ProductGateway.Dtos;
-using Monolit.Product.Domain.Dtos.GetProduct;
-using Monolit.Product.Domain.Entities;
+using Monolit.Product.Domain.Dtos;
 using Monolit.Product.Repository;
 
 namespace Monolit.Product.UseCases;
@@ -8,34 +7,25 @@ namespace Monolit.Product.UseCases;
 public class UpdateProductUseCase
 {
     private readonly IProductRepository _productRepository;
+    private readonly CreateProductUseCase _createProductUseCase;
 
-    public UpdateProductUseCase(IProductRepository productRepository)
+    public UpdateProductUseCase(IProductRepository productRepository, CreateProductUseCase createProductUseCase)
     {
         _productRepository = productRepository;
+        _createProductUseCase = createProductUseCase;
     }
 
-    public async Task<ProductUseCaseDto> Execute(InputUpdateProduct product)
+    public async Task<OutputProductUseCase> Execute(Guid productId, InputCreateProduct product)
     {
-        var existingProduct = await _productRepository.GetProduct(product.Id);
-        if (existingProduct != null)
+        try
         {
-         throw new Exception("Product not found");    
+            await _productRepository.DeleteProduct(productId);
+        }
+        catch (KeyNotFoundException ex)
+        {
+            throw new Exception("Product not found", ex);
         }
 
-        var updateProductEntity = new UpdateProductEntity
-        {
-            Id = existingProduct.Id,
-            Name = product.Name,
-            Price = product.Price,
-        };
-
-        var updatedProduct = await _productRepository.UpdateProduct(updateProductEntity);
-
-        return new ProductUseCaseDto
-        {
-            Id = updatedProduct.Id,
-            Name = updatedProduct.Name,
-            Price = updatedProduct.Price,
-        };
+        return await _createProductUseCase.Execute(product);        
     }
 }
